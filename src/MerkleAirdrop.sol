@@ -23,7 +23,7 @@ contract MerkleAirdrop {
     address[] claimers;
     bytes32 private immutable i_merkleRoot;
     IERC20 private immutable i_airdropToken;
-    mapping (address => bool) private s_hasClaimed;
+    mapping(address => bool) private s_hasClaimed;
 
     constructor(bytes32 merkleRoot, IERC20 airdropToken) {
         i_merkleRoot = merkleRoot;
@@ -41,13 +41,13 @@ contract MerkleAirdrop {
      * @param merkleProof The Merkle proof to verify the claim
      */
     function claim(address account, uint256 amount, bytes32[] calldata merkleProof) external {
-        if(s_hasClaimed[account]) {
+        if (s_hasClaimed[account]) {
             revert MerkleAirdrop__AlreadyClaimed();
         }
         // calculate using hte account and the amount, the hash -> leaf node
         bytes32 leaf = keccak256(bytes.concat(keccak256(abi.encode(account, amount))));
         // verify the proof
-        if(!MerkleProof.verify(merkleProof, i_merkleRoot, leaf)) {
+        if (!MerkleProof.verify(merkleProof, i_merkleRoot, leaf)) {
             revert MerkleAirdrop__InvalidProof();
         }
         s_hasClaimed[account] = true;
@@ -67,5 +67,4 @@ contract MerkleAirdrop {
     function getAirdropToken() external view returns (IERC20) {
         return i_airdropToken;
     }
-
 }
