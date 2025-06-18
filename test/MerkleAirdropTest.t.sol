@@ -3,11 +3,13 @@
 pragma solidity ^0.8.28;
 
 import {Test, console} from "forge-std/Test.sol";
+import {ZkSyncChainChecker} from "lib/foundry-devops/src/ZkSyncChainChecker.sol";
 
 import {MerkleAirdrop} from "../src/MerkleAirdrop.sol";
 import {FuryToken} from "../src/FuryToken.sol";
+import {DeployMerkleAirdrop} from "../script/DeployMerkleAirdrop.s.sol";
 
-contract MerkleAirdropTest is Test {
+contract MerkleAirdropTest is ZkSyncChainChecker, Test {
     MerkleAirdrop public airdrop;
     FuryToken public token;
 
@@ -21,11 +23,18 @@ contract MerkleAirdropTest is Test {
     uint256 userPrivateKey;
 
     function setUp() public {
-        // Deploy the token
-        token = new FuryToken();
-        airdrop = new MerkleAirdrop(ROOT, token);
-        token.mint(token.owner(), AMOUNT_TO_SEND); // Mint 100 tokens to the airdrop contract
-        token.transfer(address(airdrop), AMOUNT_TO_SEND); // Transfer 100 tokens to the airdrop contract
+        if(!isZkSyncChain()) {
+            // deploy with the script
+            DeployMerkleAirdrop deployer = new DeployMerkleAirdrop();
+            (airdrop, token) = deployer.deployMerkleAirdrop();
+        } else {
+            // Deploy the token
+            token = new FuryToken();
+            airdrop = new MerkleAirdrop(ROOT, token);
+            token.mint(token.owner(), AMOUNT_TO_SEND); // Mint 100 tokens to the airdrop contract
+            token.transfer(address(airdrop), AMOUNT_TO_SEND); // Transfer 100 tokens to the airdrop contract
+        }
+
         (USER, userPrivateKey) = makeAddrAndKey("user");
     }
 
